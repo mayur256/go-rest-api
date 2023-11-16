@@ -19,13 +19,27 @@ var albums = []Album {
 }
 
 func main() {
-	router := gin.Default()
-    router.GET("/albums", getAlbums)
+	app := gin.Default()
+    app.GET("/albums", getAlbums)
+	app.POST("/albums", createAlbum)
 
-    router.Run("localhost:8080")
+    app.Run("localhost:8080")
 }
 
 // fetches all albums in the system
 func getAlbums(context *gin.Context) {
 	context.IndentedJSON(http.StatusOK, albums)
+}
+
+func createAlbum(context *gin.Context) {
+	var newAlbum Album
+
+	// gin's BindJSON method binds the request json to appropriate struct
+	if err := context.BindJSON(&newAlbum); err != nil {
+		return
+	}
+
+	// If the request JSON is OK. add it to the album collection
+	albums = append(albums, newAlbum)
+	context.IndentedJSON(http.StatusCreated, albums)
 }
