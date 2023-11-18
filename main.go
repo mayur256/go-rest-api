@@ -2,6 +2,7 @@ package main
 
 import "github.com/gin-gonic/gin"
 import "net/http"
+import "fmt"
 
 // album represents data about a record album.
 type Album struct {
@@ -22,6 +23,8 @@ func main() {
 	app := gin.Default()
     app.GET("/albums", getAlbums)
 	app.POST("/albums", createAlbum)
+	app.GET("/albums/:id", getAlbumById)
+	app.DELETE("/albums/:id", removeAlbumById)
 
     app.Run("localhost:8080")
 }
@@ -31,6 +34,7 @@ func getAlbums(context *gin.Context) {
 	context.IndentedJSON(http.StatusOK, albums)
 }
 
+// creates a new album from data submitted by the client
 func createAlbum(context *gin.Context) {
 	var newAlbum Album
 
@@ -42,4 +46,33 @@ func createAlbum(context *gin.Context) {
 	// If the request JSON is OK. add it to the album collection
 	albums = append(albums, newAlbum)
 	context.IndentedJSON(http.StatusCreated, albums)
+}
+
+// fetches an existing album by its id
+func getAlbumById(context *gin.Context) {
+	id := context.Param("id")
+	
+	for _, album := range albums {
+		if album.ID == id {
+			context.IndentedJSON(http.StatusOK, album)
+			return
+		}
+	}
+
+	context.IndentedJSON(http.StatusNotFound, gin.H{"message": "album not found"})
+}
+
+func removeAlbumById (context *gin.Context) {
+	id := context.Param("id")
+
+	for index, album := range albums {
+		if album.ID == id {
+			albums = append(albums[:index], albums[index+1:]...)
+			fmt.Println("Updated albums", albums)
+			context.IndentedJSON(http.StatusOK, gin.H{"message": "album was deleted"})
+			return
+		}
+	}
+
+	context.IndentedJSON(http.StatusNotFound, gin.H{"message": "album not found"})
 }
